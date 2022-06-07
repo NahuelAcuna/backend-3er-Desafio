@@ -6,22 +6,54 @@ const app = express()
 const itemDB = 'productos.json'
 const productos = new Contenedor(itemDB)
 
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use('/static', express.static('public'))
 
-app.get('/productos', (req, res) => {
+app.get('/api/productos', (req, res) => {
     const data = productos.getAll()
     res.json(data)
 })
 
-app.get('/productoRandom', (req, res) => {
+app.get('/api/productoRandom', (req, res) => {
     const data = productos.getAll()
     res.json(data[Math.floor(Math.random() * data.length)])
 })
 
-app.get('/id/:id', (req, res) => {
+app.get('/api/productos/:id', (req, res) => {
     const query = req.params.id
     //console.log(query)
     const id = productos.getById(query)
-    res.json(id)
+
+    if (id) {
+        res.json(id)
+    } else {
+        res.status(400).send({error: 'No se encontró el producto.'})
+    }
 })
+
+
+
+//Post
+app.post('/api/productos', (req, res) => {
+    const {name, price} = req.body
+    productos.save({ name, price })
+    res.send({message: 'Producto agregado con éxito.'})
+})
+
+
+
+//Delete
+app.delete('/api/productos/:id', (req, res) => {
+    const query = req.params.id
+    const id = productos.getById(query)
+    if (id) {
+        productos.deleteById(query)
+        res.send({message: 'Producto eliminado con éxito.'})
+    } else {
+        res.status(400).send({error: 'El producto no existe.'})
+    }
+})
+
 
 app.listen(8080)
